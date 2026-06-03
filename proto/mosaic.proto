@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+// The name space for our project
+package mosaic;
+
+// This one is for the compiler to tell exactly where to generate the "Go Code"
+option go_package = "github.com/jelb30/Mosaic/proto";
+
+// --------------
+// Client API --> How external app talk to our database
+//---------------
+service KVStore {
+
+    // Put saves a key-value pais
+    rpc Put(PutRequest) returns (PutResponse);
+
+    // GET retrieved a value by its keys
+    rpc Get(GetRequest) returns (GetResponse);
+
+}
+
+// The data structure (Messages)
+message PutRequest {
+    string key = 1;
+    string value = 2;
+}
+
+message PutResponse {
+    bool success = 1;
+}
+
+message GetRequest {
+    string key = 1;
+}
+
+message GetResponse {
+    string value = 1;
+    bool found = 2; // True if the key exists, false for otherwise
+}
