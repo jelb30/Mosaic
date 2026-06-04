@@ -33,6 +33,6 @@ Mosaic operates as a coordinated 5-node cluster. It avoids the eventual consiste
 
 ### Installation
 ```bash
-git clone [https://github.com/yourusername/mosaic.git](https://github.com/yourusername/mosaic.git)
+git clone [https://github.com/jelb30/Mosaic.git](https://github.com/jelb30/Mosaic.git)
 cd mosaic
 go mod tidy
