@@ -2,6 +2,9 @@ package storage
 
 import (
 	"sync"
+	"bufio"
+	"strings"
+	"os"
 )
 
 // KVStore represents thread safe in-memory key-value store
@@ -19,6 +22,39 @@ func NewKVStore(wal *WAL) *KVStore {
 		wal:  wal,
 	}
 }
+
+func (store *KVStore) Restore(filepath string) error {
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		// if the file is doesnt exists yet (first run), that is fine.
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, ",")
+
+		if len(parts) == 3 && parts[0] == "PUT" {
+			key := strings.TrimSpace(parts[1])
+			value := strings.TrimSpace(parts[2])
+			/* 
+			Not using Mutex lock or WAL append, as the server hasnt started yet, 
+			No cleints are connected, 
+			and we are just restoring the state from disk to RAM.
+			*/
+			store.data[key] = value 
+		}
+	}
+
+	return scanner.Err()
+}
+
 
 // Put safely adds or updates a key-value pair in the store
 func (store *KVStore) Put(key, value string) error {

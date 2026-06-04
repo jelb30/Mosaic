@@ -18,7 +18,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	c.Put(ctx, &pb.PutRequest{Key: "name", Value: "Jill"})
+	// c.Put(ctx, &pb.PutRequest{Key: "name", Value: "Jill"})
 	resp, _ := c.Get(ctx, &pb.GetRequest{Key: "name"})
 	log.Printf("value=%q found=%v", resp.Value, resp.Found)
 }

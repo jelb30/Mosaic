@@ -44,6 +44,13 @@ func main() {
 	// 2. Pass the WAL into our ultra-fast memory database
 	kvStore := storage.NewKVStore(wal)
 
+	// 3. Restore the in-memory state from the WAL file on disk
+	if err := kvStore.Restore("mosaic.log"); err != nil {
+		log.Fatalf("failed to restore from database: %v", err)
+	}
+	log.Println("Database restored from WAL, ready to accept requests.")
+
+	// 4. Start the gRPC server to handle client requests
 	grpcServer := grpc.NewServer()
 	pb.RegisterKVStoreServer(grpcServer, &server{store: kvStore})
 
