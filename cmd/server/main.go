@@ -30,22 +30,24 @@ func (s *server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 }
 
 func main() {
-	// 1. Open a TCP network port on port 50051
 	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// 2. Initialize our ultra-fast memory database
-	kvStore := storage.NewKVStore()
+	// 1. Initialize the Write-Ahead Log file
+	wal, err := storage.NewWAL("mosaic.log")
+	if err != nil {
+		log.Fatalf("failed to open WAL: %v", err)
+	}
 
-	// 3. Create the gRPC server and register our service mapping
+	// 2. Pass the WAL into our ultra-fast memory database
+	kvStore := storage.NewKVStore(wal)
+
 	grpcServer := grpc.NewServer()
 	pb.RegisterKVStoreServer(grpcServer, &server{store: kvStore})
 
 	log.Println("Mosaic Node listening on port 50052...")
-
-	// 4. Start serving requests (This blocks the thread forever)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

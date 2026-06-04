@@ -8,25 +8,34 @@ import (
 type KVStore struct {
 	mu   sync.RWMutex      // The lock that protects the map with best performance
 	data map[string]string // The actual Data
+	wal  *WAL              // The Write-Ahead Log for durability and crash recovery
 }
 
 // NewKVStore is a constructor function to initialize our KVStore
 // If we dont initialize the map with "make()", it cause a panic.
-func NewKVStore() *KVStore {
+func NewKVStore(wal *WAL) *KVStore {
 	return &KVStore{
 		data: make(map[string]string),
+		wal:  wal,
 	}
 }
 
 // Put safely adds or updates a key-value pair in the store
-func (store *KVStore) Put(key, value string) {
+func (store *KVStore) Put(key, value string) error {
 
 	store.mu.Lock() // Grabbing the exclusive write lock so no one can read or write to the store while we are updating it.
 
 	defer store.mu.Unlock() // Making sure it unlocks it.
 
-	store.data[key] = value
+	// If the disk write fails, we return an error and DO NOT update RAM.
+	// Saving in disk first.
+	if err := store.wal.Append(key, value); err != nil {
+		return err
+	}
 
+	// IF the disk write is successful, we can update the in-memory map. This way we ensure durability.
+	store.data[key] = value
+	return nil
 }
 
 // Getting the data associated with the key.
